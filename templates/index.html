@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Welcome{% endblock %}
+{% block page_content %}
+<div class="page-header">
+<h1>Hello,{% if name %}{{ name.upper() }}{% else %}Stranger{% endif %}!</h1>
+</div>
+    <body>
+    <div class="container">
+        <div class="col-md-6">
+            <p>The local date and time is {{ current_time }}.</p>
+            <div class="form-group">
+                {{ wtf.quick_form(form) }}
+            </div>
+        </div>
+    </div>
+    </body>
+{% endblock %}
