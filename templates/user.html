@@ -1,7 +1,44 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{#{% import "_macros.html" as macros %}#}
 {% block title %}User -  {{ name }} {% endblock %}
 {% block page_content %}
-<div class="page-header">
-<h1>Hello, {{ name }}!</h1>
-</div>
+    <div class="page-header">
+        <h1>Hello, {{ name }}!</h1>
+    </div>
+
+    <div class="container">
+    <div class="row">
+        <div>
+            <p>comment Test</p>
+            <div class="form-group">
+                {{ wtf.quick_form(form) }}
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <p>This is comment!</p>
+            {% for comment in comments %}
+            <ul>
+            <li>
+                <a>
+                    id:    {{ comment.id }}
+                </a>
+                <a>
+                    name:   {{ comment.name }}
+                </a>
+                <a>
+                    comment:    {{ comment.comment }}
+                </a>
+                <a>
+                    time:   {{ comment.time }}
+                </a>
+            </li>
+            </ul>
+            {% endfor %}
+        </div>
+
+    </div>
+    </div>
 {% endblock %}
