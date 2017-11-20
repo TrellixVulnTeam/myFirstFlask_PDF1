@@ -20,25 +20,63 @@
         <div>
             <p>This is comment!</p>
             {% for comment in comments %}
+                {% if comment.to_id==None %}
+                <div>
             <ul>
             <li>
                 <a>
-                    id:    {{ comment.id }}
+                    comment_id:    {{ comment.id }}
                 </a>
                 <a>
                     name:   {{ comment.name }}
                 </a>
                 <a>
-                    comment:    {{ comment.comment }}
+                    comment:    {{ comment.content }}
                 </a>
                 <a>
                     time:   {{ comment.time }}
                 </a>
+
+                <a>
+                    thingid:   {{ comment.thing_id }}
+                </a>
+
+                <a>
+                    fromid:   {{ comment.from_id }}
+                </a>
+                <a>
+                    toid:   {{ comment.to_id }}
+                </a>
             </li>
             </ul>
-            {% endfor %}
+
+                </div>
+                {% else %}
+                <div>
+                    <a>     id为{{ comment.from_id}} 的用户{{ comment.replier.username }} 回复了id为 {{ comment.to_id }}的{{ comment.reply_to.username }}：{{ comment.content }}<br/>
+                                         时间：{{ comment.time }}</a>
+                </div>
+                {% endif %}
+                <a href="#">点赞</a>
+                <a href="#">评论</a>
+        {% endfor %}
+
+
         </div>
 
+    </div>
+
+    <div class="row">
+        <div>
+            <p>This is about thing</p>
+            <ul>
+                <li>
+                    <a>Thing:   {{ things.thing }}</a>
+                    <a>price:   {{ things.price }}</a>
+                    <a>about:   {{ things.about }}</a>
+                </li>
+            </ul>
+        </div>
     </div>
     </div>
 {% endblock %}

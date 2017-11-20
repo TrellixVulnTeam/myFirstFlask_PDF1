@@ -2,7 +2,7 @@ from flask import Flask,render_template,session,redirect,url_for,flash
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField,TextAreaField
+from wtforms import StringField, SubmitField,TextAreaField,IntegerField
 from wtforms.validators import DataRequired
 from flask_script import Manager,Shell
 import datetime
@@ -21,7 +21,7 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 
 # 回调函数自动导入对象
 def make_shell_context():
-    return dict(app=app, db=db, User=User, Role=Role, Comment=Comment)
+    return dict(app=app, db=db, User=User, Role=Role, Comment=Comment,Thing=Thing)
 manager.add_command("shell", Shell(make_context=make_shell_context))
 
 
@@ -38,8 +38,10 @@ class NameForm(FlaskForm):
 
 
 class CommentForm(FlaskForm):
-    name = StringField('Name',validators=[DataRequired()])
+    # name = StringField('Name',validators=[DataRequired()])
     comment = TextAreaField("输入评论",validators=[DataRequired()])
+    fromid = IntegerField('用户id',validators=[DataRequired()])
+    toid = IntegerField('评论id',default=None)
     submit2 = SubmitField('提交')
 
 class Role(db.Model):
@@ -57,18 +59,34 @@ class Role(db.Model):
 class Comment(db.Model):
     __tablename__='comments'
     id = db.Column(db.Integer,primary_key=True)
-    comment = db.Column(db.String(64),index=True)
-    name = db.Column(db.String(64),index=True)
+    content = db.Column(db.String(64),index=True)
     time = db.Column(db.DateTime,default=datetime.datetime.utcnow())
+    thing_id = db.Column(db.String(64),db.ForeignKey('things.id'))
+    from_id = db.Column(db.Integer,db.ForeignKey('users.id'),nullable=False)
+    to_id = db.Column(db.Integer,db.ForeignKey('users.id'),nullable=True)
 
     def __repr__(self):
-        return '<Comment %r>'%self.comment
+        return '<Comment:%r, name:%r, thingid:%r, fromid:%r, toid:%r>'%(self.content,self.name,self.thing_id,self.from_id,self.to_id)
+
+class Thing(db.Model):
+    __tablename__='things'
+    id = db.Column(db.Integer,primary_key=True)
+    thing = db.Column(db.String(64))
+    comments = db.relationship('Comment',backref='thing')
+    price = db.Column(db.Integer)
+    about = db.Column(db.String(256))
+
+    def __repr__(self):
+        return '<Thing %r>'%self.thing
+
 
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer,primary_key=True)
     username = db.Column(db.String(64),unique=True,index=True)
     role_id = db.Column(db.Integer,db.ForeignKey('roles.id'))
+    reply_to = db.relationship('Comment',foreign_keys=[Comment.from_id],backref=db.backref('replier', lazy='joined'))
+    replier = db.relationship('Comment', foreign_keys=[Comment.to_id], backref=db.backref('reply_to', lazy='joined'))
 
     def __repr__(self):
         return '<User %r>' % self.username
@@ -101,19 +119,24 @@ def user(name):
     new_comment = None
     form = CommentForm()
     if form.validate_on_submit():
-        new_comment = Comment(comment=form.comment.data,name=form.name.data,time=datetime.datetime.now())
+        new_comment = Comment(content=form.comment.data,time=datetime.datetime.now()
+                              ,from_id=form.fromid.data,to_id=form.toid.data,thing_id=1)
         db.session.add(new_comment)
         # session['known'] = False
         # session['name'] = form.comment.data
         db.session.commit()
         flash("已评论！")
+        # 页面刷新后清除评论记录，整型的有问题
+        form.fromid.raw_data=None
+        form.toid.raw_data=None
+        form.comment.data=''
 
     comments = Comment.query.filter_by().all()
-    print(form.comment.data)
-    print(form.name.data)
+    things = Thing.query.filter_by(id=1).first()
+    # print(form.fromid.data,'评论了： ',form.comment.data)
 
 
-    return render_template('user.html',comments=comments,form=form,name=name.capitalize())
+    return render_template('user.html',things=things,comments=comments,form=form,name=name.capitalize())
 
 @app.route('/test')
 def tst():
